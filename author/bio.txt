@@ -1,0 +1,5 @@
+Pietro Curatola
+Nato a Bologna il 10/01/1980.
+Ricercatore indipendente in fisica teorica e cosmologia.
+Formazione in ingegneria elettrica, con particolare attenzione alla modellazione, all'analisi dei dati e al software scientifico open source.
+Autore della Teoria della Coesistenza Relazionale (TCR) e del modello TCR-Cosmos, un framework alternativo testato su set di dati cosmologici di precisione.
