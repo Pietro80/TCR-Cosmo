@@ -1,0 +1,33 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite the following preprints and the associated repository."
+authors:
+  - family-names: "Curatola"
+    given-names: "Pietro"
+    affiliation: "Independent Theoretical Researcher"
+    orcid: "https://orcid.org/0000-0000-0000-0000"   # se hai un ORCID mettilo qui, altrimenti puoi togliere la riga
+title: "TCR-Cosmo: relational cosmological model"
+version: "1.1"
+date-released: 2025-09-10
+license: "CC-BY-4.0"
+repository-code: "https://github.com/Pietro80/TCR-Cosmo"
+preferred-citation:
+  type: article
+  authors:
+    - family-names: "Curatola"
+      given-names: "Pietro"
+  title: "Low-redshift BAO without dark components: testing the TCR-Cosmo model"
+  doi: "10.5281/zenodo.17093992"
+  url: "https://zenodo.org/records/17093992"
+  date-published: 2025-09-10
+references:
+  - type: article
+    authors:
+      - family-names: "Curatola"
+        given-names: "Pietro"
+    title: "Relational Coexistence Theory (TCR): Quantum and Cosmological foundations"
+    doi: "10.5281/zenodo.17079828"
+    url: "https://zenodo.org/records/17079828"
+    date-published: 2025-09-05
+  - type: repository
+    title: "TCR-Cosmo GitHub repository"
+    url: "https://github.com/Pietro80/TCR-Cosmo"
