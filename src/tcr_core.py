@@ -11,7 +11,7 @@ from astropy import constants as const
 import io, re
 
 # =========================================================
-# Costanti
+# Constants
 # =========================================================
 c = const.c.to(u.km/u.s).value  # speed of light [km/s] from astropy
 Tcmb = 2.7255         # K
@@ -22,15 +22,15 @@ def omega_gamma_from_T(Tcmb=Tcmb):
 
 
 # =========================================================
-# Utility per caricamento file di testo numerici
+# Utility for loading numeric text files
 # =========================================================
 def _load_txt_flexible(path):
-    """Caricatore robusto per file testo con separatori misti (spazi/virgole).
-    - Ignora righe vuote o commentate con '#'
-    - Usa pandas con sep r"[,\s]+" per gestire virgole e spazi
-    - Converte a numerico, mette a NaN i token non numerici (es. 'Moresco'),
-      poi elimina colonne/righe completamente NaN.
-    - Fallback manuale se pandas dovesse fallire.
+    """Robust loader for text files with mixed separators (spaces/commas).
+    - Ignores empty lines or lines commented with '#'
+    - Uses pandas with sep r"[,\s]+" to handle commas and spaces
+    - Converts to numeric, sets non-numeric tokens (e.g. 'Moresco') to NaN,
+      then drops completely NaN columns/rows.
+    - Manual fallback if pandas fails.
     """
     with open(path, "r", encoding="utf-8", errors="ignore") as f:
         raw = [ln for ln in f if ln.strip() and not ln.lstrip().startswith("#")]
@@ -42,20 +42,20 @@ def _load_txt_flexible(path):
             engine="python",
             header=None
         )
-        # forza numerico, scarta testi
+        # force numeric, discard text
         df = df.apply(pd.to_numeric, errors="coerce")
-        # drop colonne tutte NaN (es. colonne con sole stringhe scartate)
+        # drop columns entirely NaN (e.g. columns with only discarded strings)
         df = df.dropna(axis=1, how="all")
-        # drop righe tutte NaN (righe vuote post-conversione)
+        # drop rows entirely NaN (empty rows after conversion)
         df = df.dropna(axis=0, how="all")
         arr = df.values
-        # se ancora vuoto, lascia al fallback
+        # if still empty, fallback
         if arr.size > 0:
             return arr.astype(float)
     except Exception:
         pass
 
-    # Fallback manuale ultra-robusto
+    # Ultra-robust manual fallback
     rows = []
     for ln in raw:
         toks = re.split(r"[,\s]+", ln.strip())
@@ -70,7 +70,7 @@ def _load_txt_flexible(path):
     return np.array(rows, dtype=float)
 
 # =========================================================
-# Argomenti e parametri EARLY
+# Arguments and EARLY parameters
 # =========================================================
 def early_params_from_args(args):
     return {
@@ -84,7 +84,7 @@ def early_params_from_args(args):
     }
 
 # =========================================================
-# Early standard (LCDM-like per confronto)
+# Early standard (LCDM-like for comparison)
 # =========================================================
 def E_early_std(z, pars):
     omega_gamma = omega_gamma_from_T(Tcmb)
@@ -97,7 +97,7 @@ def E_early_std(z, pars):
 def H_early_std(z, pars):
     return 100.0*pars["h_early"]*E_early_std(z, pars)
 
-# Plasma primordiale (comune)
+# Primordial plasma (common)
 def Rb(z, pars):
     return 31.5*pars["omega_b"]*((Tcmb/2.7)**-4.0)*(1e3/(1.0+z))
 
@@ -105,7 +105,7 @@ def cs_z(z, pars):
     return c/np.sqrt(3.0*(1.0 + Rb(z, pars)))
 
 # =========================================================
-# Early TCR: gamma_early (recomb) + gamma_infl (banda log z)
+# Early TCR: gamma_early (recomb) + gamma_infl (log z band)
 # =========================================================
 def w_d_early(z, zt, beta, w0=0.85, w1=0.10):
     """
@@ -115,7 +115,7 @@ def w_d_early(z, zt, beta, w0=0.85, w1=0.10):
     return w1 + (w0 - w1) * expit(beta*(zt - z))
 
 def dw_d_early_dz(z, zt, beta, w0=0.85, w1=0.10):
-    # derivata analitica della logistica stabile
+    # Analytical derivative of stable logistic
     u = beta*(zt - z)
     sig = expit(u)
     dsig_dz = -beta * sig * (1.0 - sig)
@@ -138,8 +138,8 @@ def dgamma_early_dz(z, zt, beta, A, p, z_bbn):
 
 def Neff_of_z(z, Neff0, dNeff, zt, beta, z_bbn):
     """
-    N_eff(z) dinamico, safe per BBN: per z>=z_bbn ritorna Neff0.
-    Transizione logistica in z, numericamente stabile.
+    Dynamic N_eff(z), safe for BBN: for z>=z_bbn returns Neff0.
+    Logistic transition in z, numerically stable.
     """
     if (dNeff == 0.0) or (z >= z_bbn):
         return Neff0
@@ -151,9 +151,9 @@ def _sigm(x):
 
 def smooth_window_logz(z, z_on, z_off, beta):
     """
-    Finestra liscia in log10 z: w ~ 0 fuori [z_on, z_off], ~1 dentro.
-    Implementata come differenza di due logistic in L = log10(z).
-    Nessun clipping necessario.
+    Smooth window in log10 z: w ~ 0 outside [z_on, z_off], ~1 inside.
+    Implemented as difference of two logistics in L = log10(z).
+    No clipping necessary.
     """
     zz = max(z, 1.0 + 1e-12)
     L = np.log10(zz)
@@ -161,7 +161,7 @@ def smooth_window_logz(z, z_on, z_off, beta):
     w_on  = _sigm(beta*(L - Lon))
     w_off = _sigm(beta*(L - Loff))
     w = w_on - w_off
-    if w < 0.0:  # sicurezza numerica estrema
+    if w < 0.0:  # extreme numerical safety
         w = 0.0
     if w > 1.0:
         w = 1.0
@@ -169,7 +169,7 @@ def smooth_window_logz(z, z_on, z_off, beta):
 
 def dwindow_logz_dz(z, z_on, z_off, beta):
     """
-    Derivata analitica della finestra in log10 z:
+    Analytical derivative of window in log10 z:
     dw/dz = beta/(z ln 10) * [σ(1-σ)|on - σ(1-σ)|off]
     """
     zz = max(z, 1.0 + 1e-12)
@@ -199,10 +199,10 @@ def H_TCR_early(z, pars,
                 z_bbn, dNeff,
                 den_floor=1e-4):
     """
-    Early TCR senza CDM:
-    - base bare: barioni + radiazione + curvatura eff. opzionale
-    - gamma_infl(z): finestra inflazionaria su banda log(z)
-    - gamma_early(z): dressing vicino al recombination
+    Early TCR without CDM:
+    - bare base: baryons + radiation + optional effective curvature
+    - gamma_infl(z): inflationary window on log(z) band
+    - gamma_early(z): dressing near recombination
     """
     hE = pars["h_early"]
     Neff_here = Neff_of_z(z, pars["N_eff"], dNeff, zt_early, beta_early, z_bbn)
@@ -226,7 +226,7 @@ def H_TCR_early(z, pars,
 
     den = 1.0 + (1.0+z)*dgam_tot
     if den <= den_floor:
-        # protezione fisica: meglio segnalare se scende troppo
+        # physical protection: better to flag if it drops too much
         den = den_floor
     return gam_tot*H_bare/den
 
@@ -242,12 +242,12 @@ def H_early_dispatch(z, args, pars):
     )
 
 # =========================================================
-# Caricamento dataset Cosmic Chronometers (MM20)
+# Loading Cosmic Chronometers dataset (MM20)
 # =========================================================
 def load_CC_data_MM20(data_path):
     """
-    data_MM20.dat atteso come >=3 colonne: z, H(z), sigma_stat (in km/s/Mpc o %).
-    Ritorna (z, H_obs, sigma_stat_abs).
+    data_MM20.dat expected with >=3 columns: z, H(z), sigma_stat (in km/s/Mpc or %).
+    Returns (z, H_obs, sigma_stat_abs).
     """
     arr = _load_txt_flexible(data_path)
     if arr.shape[1] < 3:
@@ -256,20 +256,20 @@ def load_CC_data_MM20(data_path):
     H  = arr[:,1].astype(float)
     s3 = arr[:,2].astype(float)
 
-    # Heuristica robusta: se la 3a colonna sembra percentuale, converti → assoluta
+    # Robust heuristic: if 3rd column looks like percentage, convert → absolute
     # (es. valori tipici pochi unità e s3/H << 1)
     med_val   = float(np.nanmedian(s3))
     med_ratio = float(np.nanmedian(s3 / np.clip(H, 1e-6, None)))
     looks_percent = (med_val < 50.0) and (med_ratio < 0.5)
     sigma_abs = (s3*0.01*H) if looks_percent else s3
 
-    # Evita zeri/sottostime patologiche
+    # Avoid pathological zeros/underestimates
     sigma_abs = np.clip(sigma_abs, 1e-3, None)
     return z, H, sigma_abs
 
 
 # =========================================================
-# χ² dei cronometri cosmici con covarianza completa
+# χ² of cosmic chronometers with full covariance
 # =========================================================
 def chi2_CC_fullcov_from_files(cc_data_path, cc_table_path, H_func):
     """
@@ -280,7 +280,7 @@ def chi2_CC_fullcov_from_files(cc_data_path, cc_table_path, H_func):
     z, Hobs, sig_stat = load_CC_data_MM20(cc_data_path)
     N = len(z)
     Cstat = np.diag(sig_stat**2)
-    # PASSA z come riferimento per l'allineamento
+    # PASS z as reference for alignment
     Csys  = load_CC_cov_or_table(cc_table_path, N, z_ref=z)
     C = Cstat + Csys
 
@@ -293,24 +293,24 @@ def chi2_CC_fullcov_from_files(cc_data_path, cc_table_path, H_func):
     return chi2, N
 
 # =========================================================
-# Costruzione matrice di covarianza sistematica per i CC
+# Build systematic covariance matrix for CC
 # =========================================================
 def load_CC_cov_or_table(table_path, N_expected, z_ref=None, z_tol=5e-2):
     """
     Costruisce la covarianza sistematica per i CC.
     - Se il file è NxN: la ritorna direttamente.
     - Altrimenti assume tabella per-punto: [z, H, sigma_stat, comp1, comp2, ...].
-      Ogni 'compk' è un contributo sistematico per-punto (spesso in % di H).
-      Modello: ciascun componente è 100% correlato tra redshift ⇒
+      Each 'compk' is a systematic per-point contribution (often in % of H).
+      Model: each component is 100% correlated between redshifts ⇒
                C_sys = Σ_k (v_k v_k^T), con v_k i vettori (assoluti) per componente k.
     """
     arr = _load_txt_flexible(table_path)
 
-    # Caso 1: cov piena già pronta NxN
+    # Case 1: full covariance already prepared NxN
     if arr.ndim == 2 and arr.shape[0] == arr.shape[1] == N_expected:
         return arr.astype(float)
 
-    # Caso 2: tabella per-punto
+    # Case 2: per-point table
     if arr.size == 0 or arr.ndim != 2 or arr.shape[1] < 3:
         return np.zeros((N_expected, N_expected), dtype=float)
 
@@ -321,24 +321,24 @@ def load_CC_cov_or_table(table_path, N_expected, z_ref=None, z_tol=5e-2):
     comps = arr[:, 3:] if arr.shape[1] > 3 else np.zeros((arr.shape[0], 0))
     M = comps.shape[1]
 
-    # Se non ho componenti, niente sistematici
+    # If no components, no systematics
     if M == 0:
         return np.zeros((N_expected, N_expected), dtype=float)
 
     # Decide se i comps sono percentuali (tipico) o assoluti
-    # Heuristica robusta: se mediana(comp) < 50 e comp/H mediana < 0.5 ⇒ % di H
+    # Robust heuristic: if median(comp) < 50 and comp/H median < 0.5 ⇒ % of H
     med_comp = float(np.nanmedian(comps))
     ratio_med = float(np.nanmedian(comps / np.clip(H_tab[:, None], 1e-6, None)))
     comps_are_percent = (med_comp < 50.0) and (ratio_med < 0.5)
 
     # Matching ai redshift dei CC
     if z_ref is None:
-        # senza z_ref non posso riallineare: fallback a diagonale nulla
+        # without z_ref cannot realign: fallback to null diagonal
         return np.zeros((N_expected, N_expected), dtype=float)
 
     z_ref = np.asarray(z_ref, dtype=float)
 
-    # Costruisco i vettori v_k (dimensione N_expected) per ciascun componente k
+    # Build vectors v_k (size N_expected) for each component k
     V = np.zeros((N_expected, M), dtype=float)
     for i, z0 in enumerate(z_ref):
         j = np.argmin(np.abs(z_tab - z0))
@@ -350,14 +350,14 @@ def load_CC_cov_or_table(table_path, N_expected, z_ref=None, z_tol=5e-2):
                 else:
                     # già in km/s/Mpc
                     V[i, :] = comps[j, :]
-        # altrimenti riga resta a zero (conservativo)
+        # otherwise row remains zero (conservative)
 
-    # C_sys piena = somma dei rank-1 (outer product) per componente
-    # equivalente a: C_sys = V @ V^T
+    # Full C_sys = sum of rank-1 (outer product) per component
+    # equivalent to: C_sys = V @ V^T
     Csys = V @ V.T
     return Csys
 
-# Distanza comovente early e sound horizon (USANO il dispatcher!)
+# Early comoving distance and sound horizon (USING the dispatcher!)
 def comoving_distance_early(z, args, pars):
     integ,_ = integrate.quad(lambda zz: c/H_early_dispatch(zz, args, pars),
                              0.0, z, limit=500, epsabs=1e-8, epsrel=1e-8)
@@ -365,11 +365,11 @@ def comoving_distance_early(z, args, pars):
 
 def r_s_reference(args, pars):
     z_ref   = pars["z_star"] if args.rs_from == "z_star" else pars["z_drag"]
-    # Upper bound ragionevole e dipendente dalla finestra
+    # Reasonable upper bound, window-dependent
     z_upper = max(1e6, getattr(args, "zinfl_off", 1e6)*10.0)
     f = lambda zz: cs_z(zz, pars)/H_early_dispatch(zz, args, pars)
 
-    # Spezzatura per stabilità numerica
+    # Splitting for numerical stability
     z_mid = min(1e5, z_upper)
     integ1,_ = integrate.quad(f, z_ref, z_mid, limit=500, epsabs=1e-6, epsrel=1e-6)
     integ2 = 0.0
@@ -377,7 +377,7 @@ def r_s_reference(args, pars):
         integ2,_ = integrate.quad(f, z_mid, z_upper, limit=500, epsabs=1e-6, epsrel=1e-6)
     return pars["alpha_rs"]*(integ1 + integ2)
 
-# Vincolo CMB (theta*)
+# CMB constraint (theta*)
 def chi2_theta_star(args, pars):
     if args.theta_prior == "none":
         return 0.0, 0
@@ -387,20 +387,20 @@ def chi2_theta_star(args, pars):
     return ((100.0*th - args.theta100_P)/args.sigma_theta100)**2, 1
 
 # =========================================================
-# Late-time: LCDM e TCR (come base)
+# Late-time: LCDM and TCR (as baseline)
 # =========================================================
 # =========================================================
-# Varianti con Astropy Units (fail-fast) per H(z) e distanze
+# Variants with Astropy Units (fail-fast) for H(z) and distances
 # =========================================================
 def _z_quantity(z):
-    """Converte z in Quantity adimensionale (u.one)."""
+    """Convert z into dimensionless Quantity (u.one)."""
     if isinstance(z, u.Quantity):
         return z.to(u.one)
     return (np.float64(z)) * u.one
 
 def H_LCDM_Q(z):
     """H(z) in LCDM come Quantity [km/s/Mpc]."""
-    zz = _z_quantity(z).value  # z è adimensionale
+    zz = _z_quantity(z).value  # z is dimensionless
     Ol = 1.0 - Om_LCDM - Ok_LCDM
     H = H0_LCDM*np.sqrt(Om_LCDM*(1+zz)**3 + Ok_LCDM*(1+zz)**2 + Ol)
     return np.float64(H) * (u.km/u.s/u.Mpc)
@@ -440,7 +440,7 @@ H0_b, Om_b = 62.0, 0.32
 wbh0 = 0.01
 
 def logistic_dec(z, value0, zt, beta):
-    # decrescente con z, stabile
+    # decreasing with z, stable
     return value0/(1.0 + math.exp(beta*(z-zt)))
 
 A_default, p_default = 0.29, 0.94
@@ -474,7 +474,7 @@ def gamma_of_z(z, Ok_eff, zt_mix, beta_mix, A, p):
     return 1.0 + A*(fv**p)*(1.0 - Bcoef*(w_bh_const(z)**q) - Ccoef*(w_gal_z(z)**r_exp))
 
 def dgamma_dz(z, Ok_eff, zt_mix, beta_mix, A, p, eps_rel=1e-4):
-    # Derivata numerica con passo relativo robusto
+    # Numerical derivative with robust relative step
     h = max(1e-4, eps_rel*max(1.0, z))
     return (gamma_of_z(z+h, Ok_eff, zt_mix, beta_mix, A, p) -
             gamma_of_z(z-h, Ok_eff, zt_mix, beta_mix, A, p))/(2*h)
@@ -488,7 +488,7 @@ def H_TCR_obs(z, Ok_eff, zt_mix, beta_mix, A, p, den_floor=1e-4):
     return gam*H_bare(z, Ok_eff)/den
 
 # =========================================================
-# Distanze e BAO (senza s_rd)
+# Distances and BAO (without s_rd)
 # =========================================================
 def D_C(z, H_func):
     integ,_ = integrate.quad(lambda zz: c/H_func(zz), 0, z, limit=400, epsabs=1e-8, epsrel=1e-8)
@@ -527,10 +527,10 @@ def chi2_BAO(rows, Cinv, H_func, Ok, H0, rs_ref):
     return float(d @ Cinv @ d), len(y)
 
 # =========================================================
-# CC e SN
+# CC and SN
 # =========================================================
 def chi2_CC(cc_path, H_func):
-    # Prova: CSV a virgole con 3 colonne numeriche (ignora eventuale "reference")
+    # Test: CSV with commas, 3 numeric columns (ignore possible "reference")
     try:
         cc = pd.read_csv(
             cc_path, comment="#", engine="python",
@@ -538,7 +538,7 @@ def chi2_CC(cc_path, H_func):
             names=["z","H","sigma"]
         )
     except Exception:
-        # Fallback: separatore a spazi
+        # Fallback: space separator
         cc = pd.read_csv(
             cc_path, comment="#", engine="python",
             sep=r"\s+", header=None, usecols=[0,1,2],
@@ -554,7 +554,7 @@ def load_sn_cov_auto(path):
         txt = f.read()
     toks = pd.core.tools.numeric._FLOAT_RE.findall(txt) if hasattr(pd.core.tools.numeric, "_FLOAT_RE") else None
     if toks is None:
-        # fallback robusto
+        # robust fallback
         import re
         toks = re.split(r"[,\s]+", txt.strip())
     vals = np.array([float(t) for t in toks if t != ""], dtype=float)
@@ -589,7 +589,7 @@ def chi2_SN_fullcov(sn_dat_path, C, H_func, Ok, H0):
     return chi2, N, Bterm/Aterm
 
 # =========================================================
-# Scan inflazione (utility)
+# Inflation scan (utility)
 # =========================================================
 def scan_inflation_band(args, pars, A_vals=(3,6,9), on_vals=(2e3,5e3,1e4), off_factors=(3,5,10,20,30)):
     rows = []
@@ -616,8 +616,8 @@ def scan_inflation_band(args, pars, A_vals=(3,6,9), on_vals=(2e3,5e3,1e4), off_f
 # =========================================================
 def set_tcr_late_params(H0=None, Om=None):
     """
-    Aggiorna i parametri globali del ramo bare TCR in modo esplicito dal runner.
-    Questo evita 'barare' fissando H0/Ωm in modo rigido quando si confronta con ΛCDM.
+    Updates global parameters of the bare TCR branch explicitly from the runner.
+    This avoids 'cheating' by rigidly fixing H0/Ωm when comparing with ΛCDM.
     """
     global H0_b, Om_b
     if H0 is not None:
@@ -626,13 +626,13 @@ def set_tcr_late_params(H0=None, Om=None):
         Om_b = float(Om)
 
 # =========================================================
-# BAO: versione con dettagli per debug (contributi ~diag)
+# BAO: version with details for debugging (contributions ~diag)
 # =========================================================
 def chi2_BAO_with_details(rows, Cinv, H_func, Ok, H0, rs_ref):
     """
-    Restituisce anche un elenco di dettagli per punto: (z, label, residuo, contributo approx).
-    Nota: con covarianza piena, i contributi punto-per-punto non sono unici; qui usiamo
-    d * (Cinv @ d) come proxy utile per la diagnostica.
+    Also returns a list of details per point: (z, label, residual, approx contribution).
+    Note: with full covariance, per-point contributions are not unique; here we use
+    d * (Cinv @ d) as a useful proxy for diagnostics.
     """
     y = np.array([val for _,_,val in rows])
     pred = bao_predict_vector(rows, H_func, Ok, H0, rs_ref)

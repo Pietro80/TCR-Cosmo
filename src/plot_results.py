@@ -222,43 +222,6 @@ def figure_bao(rs_ref_LCDM, rs_ref_TCR, H_LCDM_f, H_TCR_f):
     plt.legend(); plt.tight_layout()
     plt.savefig(os.path.join(BASE, "plot_bao_Hz.png"), dpi=160); plt.close()
 
-# ---------- Heatmap/Contours χ² per TCR su griglia (BAO+SN+CC) ----------
-def figure_grid(rs_ref_TCR, H_TCR_f):
-    # Pre-carica SN cov e BAO per efficienza
-    Csn  = tcr.load_sn_cov_auto(PATH_SN_COV)
-    rows_bao, Cbao = tcr.read_bao_consensus(PATH_BAO_RES, PATH_BAO_COV)
-    Cinv_bao = np.linalg.inv(Cbao)
-
-    G = np.zeros((len(OM_GRID), len(H0_GRID)))
-    for i, OM in enumerate(OM_GRID):
-        for j, H in enumerate(H0_GRID):
-            # set parametri late-time del TCR
-            tcr.set_tcr_late_params(H0=H, Om=OM)
-            # BAO
-            chi2_bao_T,_ = tcr.chi2_BAO(rows_bao, Cinv_bao, H_TCR_f, tcr.Ok_eff_star, H, rs_ref_TCR)
-            # SN
-            chi2_sn_T,_,_ = tcr.chi2_SN_fullcov(PATH_SN, Csn, H_TCR_f, tcr.Ok_eff_star, H)
-            # CC fullcov
-            chi2_cc_T,_  = tcr.chi2_CC_fullcov_from_files(PATH_CC, PATH_CC_TAB, H_TCR_f)
-            G[i,j] = chi2_bao_T + chi2_sn_T + chi2_cc_T
-
-    H0g, OMg = np.meshgrid(H0_GRID, OM_GRID)
-
-    # Heatmap
-    plt.figure()
-    im = plt.imshow(G, origin="lower", aspect="auto",
-                    extent=[min(H0_GRID), max(H0_GRID), min(OM_GRID), max(OM_GRID)])
-    cb = plt.colorbar(im); cb.set_label(r"$\chi^2_{\rm TCR}$")
-    plt.xlabel(r"$H_0$ (TCR)"); plt.ylabel(r"$\Omega_m$ (late)")
-    plt.tight_layout(); plt.savefig(os.path.join(BASE,"plot_tcr_chi2_heatmap_light.png"), dpi=160); plt.close()
-
-    # Contours
-    plt.figure()
-    CS = plt.contour(H0g, OMg, G, levels=7)
-    plt.clabel(CS, inline=True, fmt="%.0f")
-    plt.xlabel(r"$H_0$ (TCR)"); plt.ylabel(r"$\Omega_m$ (late)")
-    plt.tight_layout(); plt.savefig(os.path.join(BASE,"plot_tcr_chi2_contours_light.png"), dpi=160); plt.close()
-
 def main():
     # imposta parametri late-time per TCR
     tcr.set_tcr_late_params(H0=H0_TCR, Om=OM_LATE)
@@ -277,7 +240,6 @@ def main():
     figure_sn(H_LCDM_f, H_TCR_f)
     figure_cc(H_LCDM_f, H_TCR_f)
     figure_bao(rs_LCDM, rs_TCR, H_LCDM_f, H_TCR_f)
-    figure_grid(rs_TCR, H_TCR_f)
 
     print("[OK] Figure salvate in", BASE)
 
