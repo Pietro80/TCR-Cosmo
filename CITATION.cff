@@ -15,9 +15,9 @@ preferred-citation:
     - family-names: "Curatola"
       given-names: "Pietro"
   title: "Low-redshift BAO without dark components: testing the TCR-Cosmo model"
-  doi: "10.5281/zenodo.17093992"
-  url: "https://zenodo.org/records/17093992"
-  date-published: 2025-09-10
+  doi: "10.5281/zenodo.17178037"
+  url: "https://zenodo.org/records/17178037"
+  date-published: 2025-09-22
 references:
   - type: article
     authors:

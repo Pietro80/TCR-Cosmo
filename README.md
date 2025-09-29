@@ -24,7 +24,7 @@
 - Python dependencies (in `requirements.txt`):
   - `numpy`, `pandas`, `scipy`, `astropy`, `matplotlib`
 
-## Required data (place in `data/`)
+## Required data
 
 - **Supernovae (Pantheon+SH0ES)**
   - `Pantheon+SH0ES.dat`  
@@ -64,6 +64,8 @@ Generate plots:
 
 ```bash
 python3 plot_results.py
+python3 plot_gamma.py
+python3 plot_Tz.py
 ```
 
 ## What it does / what it doesn’t do
