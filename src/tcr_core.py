@@ -450,7 +450,7 @@ wgal0 = 0.045
 xi = 2.0
 zt_void, beta_void = 0.7, 3.0
 zt_gal,  beta_gal  = 0.7, 4.0
-Ok_eff_star, zt_mix_star, beta_mix_star = -0.02, 0.75, 3.2
+Ok_eff_star, zt_mix_star, beta_mix_star = 0.00, 0.75, 3.2
 
 def f_v_deep_z(z): return logistic_dec(z, fdeep0, zt_void, beta_void)
 def f_v_shallow_z(z): return logistic_dec(z, fshal0, zt_void, beta_void)
