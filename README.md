@@ -14,7 +14,7 @@
 
 ---
 
-> **Data note**: for licensing/rights reasons, the data files are included in this repository.
+> **Data note**: for licensing/rights reasons, the data files are not included in this repository.
 
 ---
 
@@ -66,6 +66,7 @@ Generate plots:
 python3 plot_results.py
 python3 plot_gamma.py
 python3 plot_Tz.py
+python3 plot_H0z.py
 ```
 
 ## What it does / what it doesn’t do
@@ -91,7 +92,7 @@ python3 plot_Tz.py
 ## Citation
 
 If you use this code or reproduce its results, please cite:
-- The *TCR-Cosmo* preprint (author, title, year, arXiv/DOI if available).
+- The *TCR-Cosmo* preprint (author, title, year, DOI).
 - This repository (URL and version).
 
 ---
@@ -99,9 +100,3 @@ If you use this code or reproduce its results, please cite:
 ## License
 
 Released under the **MIT License**. See `LICENSE`.
-
----
-
-## Author & contact
-
-- For issues or technical questions, open an **Issue** or submit a focused **Pull Request** (e.g., minor fixes to paths/figures).
