@@ -67,6 +67,7 @@ python3 plot_results.py
 python3 plot_gamma.py
 python3 plot_Tz.py
 python3 plot_H0z.py
+python3 plot_Hz_TCR_LCDM_z0_z3.py
 ```
 
 ## What it does / what it doesn’t do
